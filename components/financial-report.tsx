@@ -7,9 +7,10 @@ import { ReportFiltersComponent, type ReportFilters } from "./report-filters"
 
 interface FinancialReportProps {
   data: ProcessedData | null
+  statusFilter: string
 }
 
-export function FinancialReport({ data }: FinancialReportProps) {
+export function FinancialReport({ data, statusFilter }: FinancialReportProps) {
   const [filters, setFilters] = useState<ReportFilters>({
     island: "all",
     status: "all",
@@ -20,10 +21,10 @@ export function FinancialReport({ data }: FinancialReportProps) {
   const financialData = useMemo(() => {
     if (!data) return null
 
-    const sourceData = filters.island === "all" ? data.all : data[filters.island]
+    const sourceData = filters.island === "all" ? data.all : data[filters.island as keyof ProcessedData]
 
-    const filtered = sourceData.data.filter((parcel) => {
-      if (filters.status !== "all" && parcel.normalizedStatus !== filters.status) {
+    const filtered = sourceData.data.filter((parcel: any) => {
+      if (statusFilter !== "all" && parcel.normalizedStatus !== statusFilter) {
         return false
       }
       if (filters.dateFrom && parcel.date < filters.dateFrom) {
@@ -36,16 +37,16 @@ export function FinancialReport({ data }: FinancialReportProps) {
     })
 
     // Calculate financial metrics
-    const totalCOD = filtered.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
-    const totalServiceCharge = filtered.reduce((sum, parcel) => sum + (parcel.serviceCharge || 0), 0)
-    const totalShippingCost = filtered.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
-    const totalRTSFee = filtered.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
+    const totalCOD = filtered.reduce((sum: number, parcel: any) => sum + (parcel.codAmount || 0), 0)
+    const totalServiceCharge = filtered.reduce((sum: number, parcel: any) => sum + (parcel.serviceCharge || 0), 0)
+    const totalShippingCost = filtered.reduce((sum: number, parcel: any) => sum + (parcel.totalCost || 0), 0)
+    const totalRTSFee = filtered.reduce((sum: number, parcel: any) => sum + (parcel.rtsFee || 0), 0)
 
     // Calculate RTS-specific costs
     const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
-    const rtsParcels = filtered.filter((p) => rtsStatuses.includes(p.normalizedStatus))
-    const rtsShippingCost = rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
-    const rtsFeeLost = rtsParcels.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
+    const rtsParcels = filtered.filter((p: any) => rtsStatuses.includes(p.normalizedStatus))
+    const rtsShippingCost = rtsParcels.reduce((sum: number, parcel: any) => sum + (parcel.totalCost || 0), 0)
+    const rtsFeeLost = rtsParcels.reduce((sum: number, parcel: any) => sum + (parcel.rtsFee || 0), 0)
 
     const grossProfit = totalCOD - totalShippingCost
     const netProfit = grossProfit - rtsShippingCost - rtsFeeLost
@@ -61,7 +62,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
       grossProfit,
       netProfit,
     }
-  }, [data, filters])
+  }, [data, filters, statusFilter])
 
   if (!data) {
     return (

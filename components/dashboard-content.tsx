@@ -10,11 +10,42 @@ interface DashboardContentProps {
   data: ProcessedData | null
   onDataChange: (data: ProcessedData) => void
   onUploadClick: () => void
+  statusFilter: string
 }
 
-export function DashboardContent({ data, onDataChange, onUploadClick }: DashboardContentProps) {
+export function DashboardContent({ data, onDataChange, onUploadClick, statusFilter }: DashboardContentProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
-  const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
+
+  // Filter data based on statusFilter
+  const filteredData = data
+    ? {
+        ...data,
+        all: {
+          ...data.all,
+          data: data.all.data.filter(
+            (parcel) => statusFilter === "all" || parcel.normalizedStatus === statusFilter
+          ),
+        },
+        luzon: {
+          ...data.luzon,
+          data: data.luzon.data.filter(
+            (parcel) => statusFilter === "all" || parcel.normalizedStatus === statusFilter
+          ),
+        },
+        visayas: {
+          ...data.visayas,
+          data: data.visayas.data.filter(
+            (parcel) => statusFilter === "all" || parcel.normalizedStatus === statusFilter
+          ),
+        },
+        mindanao: {
+          ...data.mindanao,
+          data: data.mindanao.data.filter(
+            (parcel) => statusFilter === "all" || parcel.normalizedStatus === statusFilter
+          ),
+        },
+      }
+    : null
 
   return (
     <div className="p-8 space-y-8 min-h-screen flex flex-col">
@@ -28,17 +59,17 @@ export function DashboardContent({ data, onDataChange, onUploadClick }: Dashboar
         </div>
       </div>
 
-      {data && (
+      {filteredData && (
         <DashboardView
-          data={data}
+          data={filteredData}
           currentRegion={currentRegion}
           onRegionChange={setCurrentRegion}
-          filter={filter}
-          onFilterChange={setFilter}
+          filter={{ type: "all", value: "" }}
+          onFilterChange={() => {}}
         />
       )}
 
-      {!data && (
+      {!filteredData && (
         <div className="flex-1 flex flex-col">
           <div className="flex-1 flex items-center justify-center">
             <div className="glass-strong rounded-2xl p-12 text-center max-w-2xl mx-auto border border-border/50">

@@ -14,16 +14,36 @@ export default function Home() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [currentView, setCurrentView] = useState<string>("dashboard")
 
+  // New filter state for status filter
+  const [filterStatus, setFilterStatus] = useState<string>("all")
+  const [appliedFilterStatus, setAppliedFilterStatus] = useState<string>("all")
+
+  const handleApplyFilter = () => {
+    setAppliedFilterStatus(filterStatus)
+  }
+
+  const handleClearFilter = () => {
+    setFilterStatus("all")
+    setAppliedFilterStatus("all")
+  }
+
   const renderView = () => {
     switch (currentView) {
       case "performance":
-        return <PerformanceReport data={data} />
+        return <PerformanceReport data={data} statusFilter={appliedFilterStatus} />
       case "analytical":
-        return <AnalyticalReport data={data} />
+        return <AnalyticalReport data={data} statusFilter={appliedFilterStatus} />
       case "financial":
-        return <FinancialReport data={data} />
+        return <FinancialReport data={data} statusFilter={appliedFilterStatus} />
       default:
-        return <DashboardContent data={data} onDataChange={setData} onUploadClick={() => setIsUploadModalOpen(true)} />
+        return (
+          <DashboardContent
+            data={data}
+            onDataChange={setData}
+            onUploadClick={() => setIsUploadModalOpen(true)}
+            statusFilter={appliedFilterStatus}
+          />
+        )
     }
   }
 
@@ -35,6 +55,40 @@ export default function Home() {
         currentView={currentView}
         onViewChange={setCurrentView}
       >
+        <div className="flex justify-between items-center mb-4 w-full">
+          <div>
+            <h2 className="text-4xl font-bold text-foreground tracking-tight uppercase">RTS Monitoring Dashboard</h2>
+            <p className="text-muted-foreground text-lg">
+              Enterprise-grade parcel tracking and analytics across Philippine regions
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="statusFilter" className="text-sm font-semibold text-foreground">
+              Filter:
+            </label>
+            <select
+              id="statusFilter"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-3 py-1 rounded border border-border bg-secondary/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="all">All</option>
+              {data &&
+                Object.keys(data.all.stats).map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+            </select>
+            <button onClick={handleApplyFilter} className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-1 rounded">
+              Apply
+            </button>
+            <button onClick={handleClearFilter} className="bg-black hover:bg-gray-800 text-white px-4 py-1 rounded">
+              Clear
+            </button>
+          </div>
+        </div>
+
         {renderView()}
       </DashboardLayout>
 
